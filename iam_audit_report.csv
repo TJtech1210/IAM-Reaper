@@ -1,0 +1,2 @@
+UserName,CreateDate,AgeDays,OldCredentials,HasMFA,HasInlinePolicies,InlinePolicyNames
+reaper_user,2025-05-29 05:37:19 UTC,1,False,False,False,[]
