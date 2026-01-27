@@ -2,7 +2,7 @@ name: IAM-Reaper CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo 
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -25,7 +25,7 @@ jobs:
 
       - name: Run IAM-Reaper (stubbed)
         run: |
-          python iam_reaper.py --output iam_report.json
+          python src/iam_reaper.py --output iam_report.json
 
       - name: Validate report exists
         run: |
@@ -35,4 +35,3 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: iam-reaper-report
-          path: iam_report.json
