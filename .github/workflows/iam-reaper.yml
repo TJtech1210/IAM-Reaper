@@ -35,7 +35,7 @@ jobs:
     
       - name: Validate report exists
         run: |
-          test -f iam_report.json
+          test -s iam_report.json
 
       - name: Upload IAM report artifact
         uses: actions/upload-artifact@v4
