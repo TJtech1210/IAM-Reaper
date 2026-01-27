@@ -25,7 +25,7 @@ jobs:
 
       - name: Run IAM-Reaper (stubbed)
         run: |
-          python src/iam_reaper.py --output iam_report.json
+          python iam_reaper.py --output iam_report.json
 
       - name: Validate report exists
         run: |
