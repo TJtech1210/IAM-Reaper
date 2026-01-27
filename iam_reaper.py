@@ -71,4 +71,5 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    args = pars
+    args = parse_args()
+
