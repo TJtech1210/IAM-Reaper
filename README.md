@@ -51,11 +51,10 @@ IAM-Reaper is meant to be a **building block**, not a full IAM governance platfo
 
 Basic usage:
 
-```bash
 python iam_reaper.py --output iam_report.json
 Verbose output (prints JSON to console):
 
-bash
+
 Copy code
 python iam_reaper.py --output iam_report.json --verbose
 Output Example
