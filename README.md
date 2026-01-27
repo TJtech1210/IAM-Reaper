@@ -1,65 +1,73 @@
+
 # IAM-Reaper
 
-IAM-Reaper is a lightweight Python security auditing tool that inspects AWS IAM users for common identity and access risks.  
-It is designed to run safely in CI/CD pipelines and produce machine-readable output for downstream security automation.
+IAM-Reaper is a lightweight, CI-safe Python security tool that audits AWS IAM users for common identity and access risks.  
+It is designed to run **without AWS credentials**, produce **deterministic JSON output**, and act as a **foundational building block** for secure infrastructure pipelines.
 
-This project is intentionally **stubbed by default** so it can run in GitHub Actions **without AWS credentials**.
-
----
-
-## What IAM-Reaper Does
-
-IAM-Reaper audits IAM users and reports on:
-
-- IAM user age (long-lived users)
-- MFA enabled or disabled
-- Presence of inline IAM policies
-- A simple, transparent risk classification per user
-
-### Risk Levels
-
-- **HIGH**
-  - MFA disabled **and**
-  - Inline policies attached
-
-- **MEDIUM**
-  - Old user (> 90 days) **or**
-  - Inline policies present
-
-- **LOW**
-  - MFA enabled
-  - No inline policies
-  - User age ≤ 90 days
-
-The risk model is intentionally simple and explainable.
+This project intentionally uses **stubbed AWS IAM responses** so it can execute safely in GitHub Actions and other CI environments.
 
 ---
 
-## Design Principles
+## Why This Exists
 
-- CI-safe by default (no AWS credentials required)
-- Deterministic output (ideal for pipelines)
-- Minimal dependencies
-- Security-first assumptions
-- Honest scope (no overclaiming)
+Most IAM audit demos require live AWS credentials and cannot safely run in CI.  
+IAM-Reaper focuses on correctness, explainability, and pipeline-first execution instead of scale or feature bloat.
 
-IAM-Reaper is meant to be a **building block**, not a full IAM governance platform.
+This repository demonstrates:
+- CI-safe cloud security tooling
+- Accurate AWS API modeling
+- Deterministic security analysis
+- Honest, limited scope
+
+---
+
+## What IAM-Reaper Checks
+
+- IAM user age (identifies long-lived users)
+- Whether MFA is enabled
+- Whether inline IAM policies are attached
+- A transparent, rule-based risk classification
+
+---
+
+## Risk Model
+
+Risk levels are intentionally simple and explainable.
+
+**HIGH**
+- MFA disabled  
+- Inline policies present  
+
+**MEDIUM**
+- User older than 90 days  
+- OR inline policies present  
+
+**LOW**
+- MFA enabled  
+- No inline policies  
+- User age ≤ 90 days  
 
 ---
 
 ## Usage
 
-Basic usage:
+Run the tool:
 
+```bash
 python iam_reaper.py --output iam_report.json
-Verbose output (prints JSON to console):
+````
 
+Verbose mode:
 
-Copy code
+```bash
 python iam_reaper.py --output iam_report.json --verbose
-Output Example
-json
-Copy code
+```
+
+---
+
+## Output Example
+
+```json
 [
   {
     "UserName": "test-user",
@@ -71,71 +79,50 @@ Copy code
     "RiskLevel": "HIGH"
   }
 ]
-The JSON output is intended for:
+```
 
-CI artifacts
+The output is designed for:
 
-Policy pipelines
+* CI artifacts
+* Security pipelines
+* Policy enforcement workflows
+* Downstream infrastructure analysis
 
-Security automation tooling
+---
 
-Future integration with IaC enforcement
+## CI and Testing
 
-CI / Testing
-IAM-Reaper uses botocore.stub.Stubber to simulate AWS IAM API responses.
+IAM-Reaper uses `botocore.stub.Stubber` to simulate AWS IAM API responses.
 
-This allows the tool to:
+This ensures:
 
-Run in GitHub Actions
+* No AWS credentials are required
+* CI execution is deterministic
+* Responses must match real AWS schemas
+* Failures occur early and predictably
 
-Avoid live AWS credentials
+The GitHub Actions workflow runs IAM-Reaper on every push, validates report creation, and uploads the JSON report as a build artifact.
 
-Match real AWS API schemas
+---
 
-Fail fast if responses are invalid
+## Repository Structure
 
-The GitHub Actions workflow:
-
-Runs IAM-Reaper on every push
-
-Validates report generation
-
-Uploads iam_report.json as a build artifact
-
-Repository Structure
-text
-Copy code
+```text
 IAM-Reaper/
 ├── iam_reaper.py
 ├── requirements.txt
 └── .github/
     └── workflows/
         └── iam-reaper.yml
-Future Work (Intentionally Not Implemented)
-The following are explicitly deferred:
+```
 
-Live AWS account execution
+---
 
-Access key last-used analysis
+## Project Status
 
-Group and managed policy evaluation
+**Frozen – feature complete**
 
-Terraform / IaC enforcement hooks
+IAM-Reaper is intentionally stable and will not receive additional features.
+Future security automation work will build on top of this tool rather than modifying it.
 
-Dashboards or UI layers
-
-These belong in a higher-level system, not this tool.
-
-Project Status
-Frozen – feature complete
-
-IAM-Reaper is considered complete and stable.
-Future work will build on top of this tool rather than modifying it.
-
-This repository serves as a reference implementation for:
-
-CI-safe security tooling
-
-AWS API–accurate stubbing
-
-Identity risk evaluation foundations
+```
