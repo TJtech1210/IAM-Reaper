@@ -1,88 +1,114 @@
 import boto3
+from botocore.stub import Stubber
 from datetime import datetime, timezone
-from pprint import pprint
-import csv
+import json
 
 
-# Initialize the IAM client
-iam = boto3.client('iam')
-
-# Get list of all IAM users
-response = iam.list_users()
-users = response['Users']
-
-print("🔍 Scanning IAM users...\n")
+def get_iam_client():
+    """
+    Create IAM client (will be stubbed in tests / GitHub Actions)
+    """
+    return boto3.client("iam", region_name="us-east-1")
 
 
-def get_user_mfa_status(user_name):
-    response = iam.list_mfa_devices(UserName=user_name)
-    mfa_devices = response['MFADevices']
-    if not mfa_devices:
-        has_mfa = False
-    else:
-        has_mfa = True
-    return {"UserName": user_name, "HasMFA": has_mfa}
+def get_user_mfa_status(iam, username):
+    try:
+        response = iam.list_mfa_devices(UserName=username)
+        return {
+            "HasMFA": bool(response.get("MFADevices"))
+        }
+    except Exception as e:
+        return {
+            "HasMFA": "ERROR",
+            "Error": str(e)
+        }
 
-def get_user_inline_policies(user_name):
-    response = iam.list_user_policies(UserName=user_name)
-    policy_names = response["PolicyNames"]
-    has_inline_policies = bool(policy_names)
-    return {
-        "HasInlinePolicies": has_inline_policies,
-        "InlinePolicyNames": policy_names
-    }
 
-user_audit_report = []
+def get_user_inline_policies(iam, username):
+    try:
+        response = iam.list_user_policies(UserName=username)
+        policies = response.get("PolicyNames", [])
+        return {
+            "HasInlinePolicies": bool(policies),
+            "InlinePolicyNames": policies
+        }
+    except Exception as e:
+        return {
+            "HasInlinePolicies": "ERROR",
+            "Error": str(e)
+        }
 
-# Loop through users and check credential age
-for user in users:
-    username = user['UserName']
-    create_date = user['CreateDate']
+
+def run_audit(iam):
+    response = iam.list_users()
+    users = response.get("Users", [])
+
     now = datetime.now(timezone.utc)
-    age = (now - create_date).days
-    create_date_str = create_date.strftime("%Y-%m-%d %H:%M:%S %Z")
+    report = []
 
-    user_report = {
-        "UserName": username,
-        "CreateDate": create_date_str,
-        "AgeDays": age,
-        "OldCredentials": age > 90
-    }
-    user_report.update(get_user_mfa_status(username))
-    user_report.update(get_user_inline_policies(username))
+    for user in users:
+        username = user["UserName"]
+        create_date = user["CreateDate"]
+        age_days = (now - create_date).days
 
-    user_audit_report.append(user_report)
-    
+        user_report = {
+            "UserName": username,
+            "CreateDate": create_date.isoformat(),
+            "UserAgeDays": age_days,
+            "OldUser": age_days > 90
+        }
 
-     # Optional: Print per-user status as you loop (for feedback)
-    print(f"User: {username} | Created: {create_date} | Age: {age} days")
+        user_report.update(get_user_mfa_status(iam, username))
+        user_report.update(get_user_inline_policies(iam, username))
 
-    if age > 90:
-        print(f"⚠️  {username} has credentials older than 90 days!\n")
-    else:
-        print(f"✅  {username} credentials age is OK.\n")
-# Only print the report ONCE, after the loop
+        report.append(user_report)
 
-pprint(user_audit_report)
+    return report
 
-# Optionally, set your CSV filename
-csv_filename = "iam_audit_report.csv"
 
-# List the fields you want in the CSV (should match your dict keys)
-fieldnames = [
-    "UserName",
-    "CreateDate",
-    "AgeDays",
-    "OldCredentials",
-    "HasMFA",
-    "HasInlinePolicies",
-    "InlinePolicyNames"
-]
+if __name__ == "__main__":
+    iam = get_iam_client()
 
-# Open the file and write
-with open(csv_filename, 'w', newline='') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    writer.writeheader()
-    for user in user_audit_report:
-        writer.writerow(user)
-print("✅ CSV export complete: iam_audit_report.csv")
+    # ---- STUBBED DATA (SIMULATION MODE) ----
+    stubber = Stubber(iam)
+
+    stubber.add_response(
+        "list_users",
+        {
+            "Users": [
+                {
+                    "UserName": "test-user",
+                    "CreateDate": datetime(2023, 1, 1, tzinfo=timezone.utc)
+                }
+            ]
+        }
+    )
+
+    stubber.add_response(
+        "list_mfa_devices",
+        {
+            "MFADevices": []
+        },
+        {"UserName": "test-user"}
+    )
+
+    stubber.add_response(
+        "list_user_policies",
+        {
+            "PolicyNames": ["InlineAdminPolicy"]
+        },
+        {"UserName": "test-user"}
+    )
+
+    stubber.activate()
+
+    audit_results = run_audit(iam)
+
+    print(f"Scanned {len(audit_results)} IAM users")
+
+    with open("iam_report.json", "w") as f:
+        json.dump(audit_results, f, indent=2)
+
+    print("iam_report.json generated")
+
+    stubber.deactivate()
