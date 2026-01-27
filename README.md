@@ -1,87 +1,56 @@
-IAM Reaper
+# IAM-Reaper
 
-A Python-powered AWS IAM audit tool to check IAM users for risky security posture and export findings to CSV.
+IAM-Reaper is a lightweight Python security tool that audits AWS IAM users for common misconfigurations and risk indicators.  
+It is designed to run safely in CI/CD pipelines and produce machine-readable output for downstream security tooling.
 
----
-
-🚀 What It Does
-
-- Lists all IAM users in your AWS account
-- Checks which users have MFA enabled or disabled
-- Detects users with risky inline policies
-- Flags users with “old” credentials (over 90 days by default)
-- Outputs a detailed report to a CSV file, ready for security review or Excel
-
-
-⚙️ How To Run
-
-1. Clone the repo:
-  
-   git clone https://github.com/TJtech1210/IAM-Reaper.git
-   cd IAM-Reaper
-
-
-2. Set up your Python environment (optional but recommended):
-
- 
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install boto3
-   
-
-3. Configure AWS credentials:
-
-   * Use `aws configure` or set your credentials in environment variables.
-   * Make sure you have permission to list users and policies.
-
-4. Run the script:
-
-   
-   python reaper.py
-   
-
-5. Check the output:
-
-Review `iam_audit_report.csv` for your audit results.
-
-
-📝 Example Output
-
-User: reaper_user | Created: 2025-05-29 05:37:19 UTC | Age: 1 days
-✅  reaper_user credentials age is OK.
+This project is intentionally **stubbed by default** to enable testing in GitHub Actions without AWS credentials.
 
 ---
 
-CSV Example:
-UserName,CreateDate,AgeDays,OldCredentials,HasMFA,HasInlinePolicies,InlinePolicyNames
-reaper_user,2025-05-29 05:37:19 UTC,1,False,False,False,[]
+## 🔍 What IAM-Reaper Checks
+
+- IAM user age (identifies long-lived users)
+- MFA enabled / disabled
+- Inline IAM policies attached
+- Basic risk classification per user
+
+Risk levels:
+- **HIGH** – No MFA and inline policies present
+- **MEDIUM** – Old users or inline policies present
+- **LOW** – MFA enabled and no inline policies
 
 ---
 
-🔒 What’s Next (Planned Improvements)
+## 🧱 Design Principles
 
-* Export report to JSON
-* Add CLI options for output format and credential age threshold (`argparse`)
-* Add error handling/logging for failed AWS calls
-* Check last login, access key age, and permissions summary
-* (Optional) Upload report to S3
+- CI-safe (no AWS credentials required)
+- Deterministic output for pipelines
+- Minimal dependencies
+- Security-first assumptions
 
----
-
-👤 Author
-
-[TJtech1210](https://github.com/TJtech1210)
+IAM-Reaper is intended as a **building block** for larger secure-infrastructure pipelines.
 
 ---
 
-🤝 Contributing
+## ▶️ Usage
 
-PRs welcome! If you want to practice Python/AWS/Boto3, feel free to fork and improve!*
+```bash
+python iam_reaper.py --output iam_report.json
 
----
+Optional:
 
-🏷️ License
-
-MIT 
+python iam_reaper.py --output iam_report.json --verbose
 
 
+📄 Output Example
+[
+  {
+    "UserName": "test-user",
+    "UserAgeDays": 400,
+    "OldUser": true,
+    "HasMFA": false,
+    "HasInlinePolicies": true,
+    "InlinePolicyNames": ["InlineAdminPolicy"],
+    "RiskLevel": "HIGH"
+  }
+]
