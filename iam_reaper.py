@@ -6,7 +6,6 @@ import json
 
 
 def get_iam_client():
-    # Client is stubbed in CI, no real AWS calls
     return boto3.client("iam", region_name="us-east-1")
 
 
@@ -91,7 +90,10 @@ if __name__ == "__main__":
         {
             "Users": [
                 {
+                    "Path": "/",
                     "UserName": "test-user",
+                    "UserId": "AIDAEXAMPLE123456789",
+                    "Arn": "arn:aws:iam::123456789012:user/test-user",
                     "CreateDate": datetime(2023, 1, 1, tzinfo=timezone.utc)
                 }
             ]
@@ -115,7 +117,6 @@ if __name__ == "__main__":
 
     results = run_audit(iam)
 
-    # ---- WRITE OUTPUT FILE (THIS IS WHAT CI CHECKS) ----
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2)
 
