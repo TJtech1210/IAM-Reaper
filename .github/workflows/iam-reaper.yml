@@ -26,7 +26,13 @@ jobs:
       - name: Run IAM-Reaper (stubbed)
         run: |
           python iam_reaper.py --output iam_report.json
+      
+      - name: Debug workspace
+        run: |
+          pwd
+          ls -la
 
+    
       - name: Validate report exists
         run: |
           test -f iam_report.json
