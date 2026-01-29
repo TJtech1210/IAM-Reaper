@@ -6,7 +6,7 @@ import json
 
 
 def get_iam_client():
-    return boto3.client("iam", region_name="us-east-1")
+    return boto3.client("iam", region_name="us-east-1") 
 
 
 def get_user_mfa_status(iam, username):
